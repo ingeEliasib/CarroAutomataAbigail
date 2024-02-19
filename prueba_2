@@ -1,0 +1,110 @@
+#include <Servo.h>
+
+Servo miServo; 
+
+const int Trigger = 12; // Pin del Trigger del sensor ultrasónico
+const int Echo = 11;    // Pin del Echo del sensor ultrasónico
+const int in1 = 10;     // Pin que controla el sentido de giro Motor B
+const int in4 = 7;      // Pin que controla el sentido de giro Motor B
+const int in2 = 9;      // Pin que controla el sentido de giro Motor A
+const int in3 = 8;      // Pin que controla el sentido de giro Motor A
+
+// Prototipos de las funciones
+void detenerse();
+void avanzar();
+void retroceder();
+void girarDerecha();
+void girarIzquierda();
+int escanear(int angulo);
+
+void setup() {
+  miServo.attach(4); // Inicializa el servo en el pin 4
+  pinMode(Trigger, OUTPUT); // Inicializa el pin del Trigger como salida
+  pinMode(Echo, INPUT);     // Inicializa el pin del Echo como entrada
+  pinMode(in1, OUTPUT);     // Inicializa los pines del motor B como salidas
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);     // Inicializa los pines del motor A como salidas
+  pinMode(in4, OUTPUT);
+  Serial.begin(9600); // Inicializa la comunicación serial
+}
+
+void loop() {
+  long duration, distance;
+
+  // Genera un pulso para activar el sensor ultrasónico
+  digitalWrite(Trigger, LOW);
+  delayMicroseconds(2);
+  digitalWrite(Trigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(Trigger, LOW);
+
+  // Mide el tiempo que tarda en recibir el eco
+  duration = pulseIn(Echo, HIGH);
+
+  // Calcula la distancia en centímetros
+  distance = duration * 0.034 / 2;
+
+  // Imprime la distancia en el monitor serial
+  Serial.print("Distancia: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // Si la distancia es menor a 15 cm, detiene el Arduino
+  if (distance <= 15 && distance >= 5) {
+    detenerse();
+  } else {
+    avanzar(); // Si no hay obstáculos en el rango de 5 a 15 cm, avanza
+  }
+}
+
+// Función para detener el Arduino
+void detenerse() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
+
+// Función para avanzar
+void avanzar() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW); // Llanta A hacia adelante
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW); // Llanta B hacia adelante
+}
+
+// Función para retroceder
+void retroceder() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH); // Llanta A hacia atrás
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH); // Llanta B hacia atrás
+}
+
+// Función para girar a la derecha
+void girarDerecha() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH); // Llanta A hacia atrás
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW); // Llanta B hacia adelante
+  delay(500); // Espera un tiempo para girar
+  detenerse(); // Detiene el giro
+}
+
+// Función para girar a la izquierda
+void girarIzquierda() {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW); // Llanta A hacia adelante
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH); // Llanta B hacia atrás
+  delay(500); // Espera un tiempo para girar
+  detenerse(); // Detiene el giro
+}
+
+// Función para escanear en una dirección específica
+int escanear(int angulo) {
+  miServo.write(90 + angulo); // Mueve el servo en la dirección especificada
+  delay(500); // Espera a que el servo termine de moverse
+  long duration = pulseIn(Echo, HIGH); // Mide la distancia en esa dirección
+  return duration * 0.034 / 2; // Devuelve la distancia en centímetros
+}
