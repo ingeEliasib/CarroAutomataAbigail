@@ -12,11 +12,11 @@ const int in3 = 8;      // Pin que controla el sentido de giro Motor A
 // Prototipos de las funciones
 void detenerse();
 void avanzar();
+void retroceder();
 void girarDerecha();
 void girarIzquierda();
 long distancia();
 void determinarMovimiento();
-void retroceder();
 
 void setup() {
   miServo.attach(4); // Inicializa el servo en el pin 4
@@ -32,18 +32,15 @@ void setup() {
 void loop() {
   long distance = distancia();
 
-  // Imprime la distancia en el monitor serial
-  Serial.print("Distancia: ");
-  Serial.print(distance);
-  Serial.println(" cm");
-
-  // Si la distancia es menor a 15 cm, detiene el Arduino
-  if (distance <= 25 && distance >= 5) {
-    detenerse();
-    delay(3000); // Espera 3 segundos
-    determinarMovimiento(); // Determina el movimiento a realizar
+  if (distance >= 30) {
+    avanzar();
+    delay(500);
+   
   } else {
-    avanzar(); // Si no hay obstáculos en el rango de 5 a 15 cm, avanza
+    delay(500);
+    retroceder();
+    delay(500);
+    determinarMovimiento();
   }
 }
 
@@ -56,41 +53,35 @@ void detenerse() {
 }
 
 // Función para avanzar
-void retroceder() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH); // Llanta A hacia adelante
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW); // Llanta B hacia adelante
-}
-
-// Función para avanzar
 void avanzar() {
-
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW); // Llanta A hacia adelante
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH); // Llanta B hacia adelante
+}
 
+// Función para retroceder
+void retroceder() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH); // Llanta A hacia atrás
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW); // Llanta B hacia atrás
 }
 
 // Función para girar a la derecha
-void girarIzquierda() {
+void girarDerecha() {
   digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW); // Llanta A hacia atrás
-  //digitalWrite(in3, HIGH);
-  //digitalWrite(in4, LOW); // Llanta B hacia adelante
-  delay(500); // Espera un tiempo para girar
-  //detenerse(); // Detiene el giro
+  digitalWrite(in2, LOW); // Llanta A hacia adelante
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW); // Llanta B detenida
 }
 
 // Función para girar a la izquierda
-void girarDerecha() {
-  //digitalWrite(in1, HIGH);
-  //digitalWrite(in2, LOW); // Llanta A hacia adelante
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW); // Llanta B hacia atrás
-  delay(500); // Espera un tiempo para girar
-  //detenerse(); // Detiene el giro
+void girarIzquierda() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW); // Llanta A detenida
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH); // Llanta B hacia adelante
 }
 
 // Función para medir la distancia con el sensor ultrasónico
@@ -120,26 +111,25 @@ void determinarMovimiento() {
   miServo.write(180);
   delay(1000);
   long Dis180 = distancia();
-
+  miServo.write(90);
   // Determinar el movimiento basado en las distancias medidas
   if (Dis0 > Dis90) {
     if (Dis0 > Dis180) {
-      retroceder();
+      
       girarIzquierda();
     } else {
-      retroceder();
+      
       girarDerecha();
     }
   } else if (Dis90 > Dis180) {
-    retroceder();
+   
     girarDerecha();
     delay(500);
     girarDerecha();
   } else {
-    retroceder();
+    
     girarIzquierda();
   }
-  miServo.write(90);
-  detenerse();
-  delay(1000);
+  
+  
 }
